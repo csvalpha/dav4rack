@@ -393,8 +393,8 @@ module DAV4Rack
     
     # XML parsed request
     def request_document
-      @request_document ||= Nokogiri.XML(request.body.read)
-    rescue
+      @request_document ||= Nokogiri::XML::Document.parse(request.body.read, nil, nil, Nokogiri::XML::ParseOptions::STRICT)
+    rescue Nokogiri::XML::SyntaxError
       raise BadRequest
     end
 
