@@ -7,7 +7,7 @@ module DAV4Rack
     def initialize(options={})
       @options = options.dup
       unless(@options[:resource_class])
-        require 'dav4rack/file_resource'
+        require File.expand_path('../resources/file_resource', __FILE__)
         @options[:resource_class] = FileResource
         @options[:root] ||= Dir.pwd
       end
