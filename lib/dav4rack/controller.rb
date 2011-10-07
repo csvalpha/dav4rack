@@ -92,23 +92,38 @@ module DAV4Rack
 
     # Return response to DELETE
     def delete
-      if(resource.exist?)
-        resource.lock_check
-        resource.delete
+      if @request.env['FRAGMENT']
+        BadRequest
       else
-        NotFound
+        if(resource.exist?)
+          resource.lock_check
+          resource.delete
+        else
+          NotFound
+        end
       end
     end
     
     # Return response to MKCOL
     def mkcol
-      resource.lock_check
-      status = resource.make_collection
-      multistatus do |xml|
-        xml.response do
-          xml.href "#{scheme}://#{host}:#{port}#{url_escape(resource.public_path)}"
-          xml.status "#{http_version} #{status.status_line}"
+      if @request.body.size > 0
+        UnsupportedMediaType
+        
+      else
+        resource.lock_check
+        status = resource.make_collection
+        if status == Created
+          multistatus do |xml|
+            xml.response do
+              xml.href "#{scheme}://#{host}:#{port}#{url_escape(resource.public_path)}"
+              xml.status "#{http_version} #{status.status_line}"
+            end
+          end
+        
+        else
+          status
         end
+        
       end
     end
     
@@ -135,18 +150,23 @@ module DAV4Rack
           dest = resource_class.new(destination, clean_path(destination), @request, @response, @options.merge(:user => resource.user))
           status = nil
           if(args.include?(:copy))
-            status = resource.copy(dest, overwrite)
+            status = resource.copy(dest, overwrite, depth)
           else
             return Conflict unless depth.is_a?(Symbol) || depth > 1
             status = resource.move(dest, overwrite)
           end
           response['Location'] = "#{scheme}://#{host}:#{port}#{dest.public_path}" if status == Created
-          multistatus do |xml|
-            xml.response do
-              xml.href "#{scheme}://#{host}:#{port}#{status == Created ? dest.public_path : resource.public_path}"
-              xml.status "#{http_version} #{status.status_line}"
+          if status.is_a?(Array)
+            multistatus do |xml|
+              xml.response do
+                xml.href "#{scheme}://#{host}:#{port}#{status == Created ? dest.public_path : resource.public_path}"
+                xml.status "#{http_version} #{status.status_line}"
+              end
             end
+          else
+            status
           end
+            
         end
       end
     end
@@ -233,6 +253,7 @@ module DAV4Rack
               end
             end
           end
+          response['Lock-Token'] = locktoken
           response.status = resource.exist? ? OK : Created
         rescue LockFailure => e
           multistatus do |xml|

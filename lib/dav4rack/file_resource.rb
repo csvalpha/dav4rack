@@ -46,7 +46,7 @@ module DAV4Rack
     # Return the mime type of this resource.
     def content_type
       if stat.directory?
-        "text/html"
+        "httpd/unix-directory"
       else 
         mime_type(file_path, DefaultMimeTypes)
       end
@@ -105,33 +105,59 @@ module DAV4Rack
     # HTTP COPY request.
     #
     # Copy this resource to given destination resource.
-    def copy(dest, overwrite = false)
-      if(dest.path == path)
-        Conflict
-      elsif(stat.directory?)
-        dest.make_collection
-        FileUtils.cp_r("#{file_path}/.", "#{dest.send(:file_path)}/")
-        OK
+    def copy(dest, overwrite = false, depth = "Infinity")
+      
+      if !exist?
+        # the source file does not exists, give up immediately
+        PreconditionFailed
       else
-        exists = File.exists?(file_path)
-        if(exists && !overwrite)
-          PreconditionFailed
-        else
-          open(file_path, "rb") do |file|
-            dest.write(file)
+        if dest.exist?
+          # the destination exists, check overwrite flag
+          if overwrite
+            if depth == "0"
+              # just copy the folder, nothing below it
+              # since the folder already exists, we do nothing
+            else
+              FileUtils.cp_r(file_path, dest.file_path,
+                  :remove_destination => true
+                )
+            end
+            
+            # we replaced an existing resource
+            NoContent
+            
+          else
+            PreconditionFailed
           end
-          exists ? NoContent : Created
+          
+        else
+          # destination does not exists, ignore the overwrite flag
+          if depth == "0"
+            FileUtils.mkdir(dest.file_path)
+          else
+            FileUtils.cp_r(file_path, dest.file_path)
+          end
+          
+          Created
         end
       end
+      
+    rescue Errno::ENOENT
+      Conflict
     end
   
     # HTTP MOVE request.
     #
     # Move this resource to given destination resource.
     def move(*args)
-      copy(*args)
-      delete
-      OK
+      status = copy(*args)
+      # ensure the copy was successful before deleting the
+      # source !!!
+      if (status == Created) || (status == NoContent)
+        delete
+      end
+      
+      status
     end
     
     # HTTP MKCOL request.
@@ -140,6 +166,10 @@ module DAV4Rack
     def make_collection
       Dir.mkdir(file_path)
       Created
+    rescue Errno::ENOENT
+      Conflict
+    rescue Errno::EEXIST
+      MethodNotAllowed
     end
   
     # Write to this resource from given IO.
@@ -157,6 +187,10 @@ module DAV4Rack
       File.unlink(tempfile) rescue nil
     end
     
+    def file_path
+      root + '/' + path
+    end
+    
     private
 
     def authenticate(user, pass)
@@ -169,10 +203,6 @@ module DAV4Rack
     
     def root
       @options[:root]
-    end
-
-    def file_path
-      root + '/' + path
     end
 
     def stat
