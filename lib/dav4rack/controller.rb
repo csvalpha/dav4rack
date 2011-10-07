@@ -323,6 +323,10 @@ module DAV4Rack
     def resource_class
       @options[:resource_class]
     end
+    
+    def debug_mode
+      @options[:debug]
+    end
 
     # Root URI path for the resource
     def root_uri_path
@@ -424,7 +428,13 @@ module DAV4Rack
         end
       end
       
-      response.body = doc.to_xml
+      xml_options = Nokogiri::XML::Node::SaveOptions::AS_XML
+      if debug_mode
+        xml_options += Nokogiri::XML::Node::SaveOptions::FORMAT
+      end
+        
+      response.body = doc.to_xml(:save_with => xml_options )
+      
       response["Content-Type"] = 'text/xml; charset="utf-8"'
       response["Content-Length"] = response.body.size.to_s
     end
