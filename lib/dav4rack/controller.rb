@@ -369,7 +369,7 @@ module DAV4Rack
 
     # Current HTTP version being used
     def http_version
-      env['HTTP_VERSION'] || env['SERVER_PROTOCOL'] || 'HTTP/1.0'
+      env['SERVER_PROTOCOL'] || env['HTTP_VERSION'] || 'HTTP/1.0'
     end
     
     # Overwrite is allowed
