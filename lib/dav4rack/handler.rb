@@ -24,7 +24,13 @@ module DAV4Rack
         
         controller = nil
         begin
-          controller = Controller.new(request, response, @options.dup)
+          opts = @options.dup
+          if opts[:root] && opts[:root].respond_to?(:call)
+            # resolve path if needed
+            opts[:root] = opts[:root].call(env) 
+          end
+          
+          controller = Controller.new(request, response, opts)
           controller.authenticate
           res = controller.send(request.request_method.downcase)
           response.status = res.code if res.respond_to?(:code)
