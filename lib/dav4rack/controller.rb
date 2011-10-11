@@ -1,3 +1,5 @@
+require 'addressable/uri'
+
 module DAV4Rack
   
   class Controller
@@ -21,17 +23,13 @@ module DAV4Rack
     # s:: string
     # Escape URL string
     def url_escape(s)
-      s.gsub(/([^\/a-zA-Z0-9_.-]+)/n) do
-        '%' + $1.unpack('H2' * $1.size).join('%').upcase
-      end.tr(' ', '+')
+      Addressable::URI.escape(s)
     end
     
     # s:: string
     # Unescape URL string
     def url_unescape(s)
-      s.tr('+', ' ').gsub(/((?:%[0-9a-fA-F]{2})+)/n) do
-        [$1.delete('%')].pack('H*')
-      end
+      Addressable::URI.unescape(s)
     end  
     
     # Return response to OPTIONS

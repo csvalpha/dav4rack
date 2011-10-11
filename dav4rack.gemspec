@@ -14,7 +14,8 @@ Gem::Specification.new do |s|
   
   s.files         = `git ls-files`.split("\n")
   
-  s.add_dependency 'nokogiri', '~> 1.4.2'
-  s.add_dependency 'uuidtools', '~> 2.1.1'
-  s.add_dependency 'rack', '>= 1.1.0'
+  s.add_dependency 'nokogiri',    '~> 1.4.2'
+  s.add_dependency 'uuidtools',   '~> 2.1.1'
+  s.add_dependency 'rack',        '~> 1.3.4'
+  s.add_dependency 'addressable', '~> 2.2.6'  
 end
