@@ -176,10 +176,10 @@ module DAV4Rack
       unless(resource.exist?)
         NotFound
       else
-        unless(request_document.xpath("//#{ns}propfind/#{ns}allprop").empty?)
+        unless(request_document.xpath("//propfind/allprop").empty?)
           names = resource.property_names
         else
-          names = request_document.xpath("//#{ns}propfind/#{ns}prop").children.find_all{|n|n.element?}.map{|n|n.name}
+          names = request_document.xpath("//propfind/prop").children.find_all{|n|n.element?}.map{|n|n.name}
           names = resource.property_names if names.empty?
         end
         multistatus do |xml|
@@ -217,16 +217,16 @@ module DAV4Rack
     # NOTE: This will pass an argument hash to Resource#lock and
     # wait for a success/failure response. 
     def lock
-      lockinfo = request_document.xpath("//#{ns}lockinfo")
+      lockinfo = request_document.xpath("//lockinfo")
       asked = {}
       asked[:timeout] = request.env['Timeout'].split(',').map{|x|x.strip} if request.env['Timeout']
       asked[:depth] = depth
       unless([0, :infinity].include?(asked[:depth]))
         BadRequest
-      else
-        asked[:scope] = lockinfo.xpath("//#{ns}lockscope").children.find_all{|n|n.element?}.map{|n|n.name}.first
-        asked[:type] = lockinfo.xpath("#{ns}locktype").children.find_all{|n|n.element?}.map{|n|n.name}.first
-        asked[:owner] = lockinfo.xpath("//#{ns}owner/#{ns}href").children.map{|n|n.text}.first
+      else        
+        asked[:scope] = lockinfo.xpath("//lockscope").children.find_all{|n|n.element?}.map{|n|n.name}.first
+        asked[:type] = lockinfo.xpath("locktype").children.find_all{|n|n.element?}.map{|n|n.name}.first
+        asked[:owner] = lockinfo.xpath("//owner/href").children.map{|n|n.text}.first
         begin
           lock_time, locktoken = resource.lock(asked)
           render_xml(:prop) do |xml|
@@ -394,19 +394,10 @@ module DAV4Rack
     # XML parsed request
     def request_document
       @request_document ||= Nokogiri::XML::Document.parse(request.body.read, nil, nil, Nokogiri::XML::ParseOptions::STRICT)
+      @request_document.remove_namespaces!
+      @request_document
     rescue Nokogiri::XML::SyntaxError
       raise BadRequest
-    end
-
-    # Namespace being used within XML document
-    # TODO: Make this better
-    def ns
-      _ns = ''
-      if(request_document && request_document.root && request_document.root.namespace_definitions.size > 0)
-        _ns = request_document.root.namespace_definitions.first.prefix.to_s
-        _ns += ':' unless _ns.empty?
-      end
-      _ns
     end
     
     # pattern:: XPath pattern
