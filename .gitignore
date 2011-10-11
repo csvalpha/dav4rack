@@ -4,4 +4,6 @@
 *~
 doc/*
 pkg/*
-test/repo
+test/
+*.log
+Gemfile.lock
