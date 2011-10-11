@@ -110,17 +110,7 @@ module DAV4Rack
       else
         resource.lock_check
         status = resource.make_collection
-        if status == Created
-          multistatus do |xml|
-            xml.response do
-              xml.href "#{scheme}://#{host}:#{port}#{url_escape(resource.public_path)}"
-              xml.status "#{http_version} #{status.status_line}"
-            end
-          end
-        
-        else
-          status
-        end
+        status
         
       end
     end
