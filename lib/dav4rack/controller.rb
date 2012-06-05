@@ -199,15 +199,30 @@ module DAV4Rack
         end
       end
     end
-
-
+    
+    
+    
+    # Second-600
+    # Infinite
+    def parse_timeout(str)
+      if str.is_a?(String)
+        if str.include?('-')
+          str.split('-').last.to_i
+        elsif str == "Infinite"
+          2**32
+        end
+      else
+        nil
+      end
+    end
+    
     # Lock current resource
     # NOTE: This will pass an argument hash to Resource#lock and
     # wait for a success/failure response. 
     def lock
       lockinfo = request_document.xpath("//lockinfo")
       asked = {}
-      asked[:timeout] = request.env['Timeout'].split(',').map{|x|x.strip} if request.env['Timeout']
+      asked[:timeout] = parse_timeout(request.env['Timeout'] || request.env['HTTP_TIMEOUT'])
       asked[:depth] = depth
       unless([0, :infinity].include?(asked[:depth]))
         BadRequest
