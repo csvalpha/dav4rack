@@ -12,9 +12,11 @@ Gem::Specification.new do |s|
   s.executables << 'dav4rack'
   s.has_rdoc = true
   s.extra_rdoc_files = ['README.rdoc']
-  s.add_dependency 'nokogiri', '>= 1.4.2'
-  s.add_dependency 'uuidtools', '~> 2.1.1'
-  s.add_dependency 'rack', '>= 1.1.0'
+  s.add_dependency 'nokogiri',    '~> 1.12.5'
+  s.add_dependency 'uuidtools',   '~> 2.1.5'
+  s.add_dependency 'rack',        '~> 2.2.3'
+  s.add_dependency 'addressable', '~> 2.8.0'
+  s.add_dependency 'webrick',     '~> 1.7.0'
   s.files = %w{
 .gitignore
 LICENSE

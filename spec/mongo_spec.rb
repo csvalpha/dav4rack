@@ -8,6 +8,7 @@ require 'dav4rack/resources/mongo_resource'
 require 'mongo'
 require 'mongoid'
 require 'rspec'
+require 'addressable/uri'
 require File.join(File.dirname(__FILE__), 'handler_spec.rb')
 
 describe DAV4Rack::Handler do
@@ -51,7 +52,7 @@ describe DAV4Rack::Handler do
   end
  
   def url_escape(string)
-    URI.escape(string)
+    Addressable::URI.escape(string)
   end
   
   def response_xml

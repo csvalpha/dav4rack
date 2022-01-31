@@ -5,6 +5,7 @@ require 'dav4rack'
 require 'fileutils'
 require 'nokogiri'
 require 'rspec'
+require 'addressable/uri'
 
 describe DAV4Rack::Handler do
   DOC_ROOT = File.expand_path(File.dirname(__FILE__) + '/htdocs')
@@ -49,7 +50,7 @@ describe DAV4Rack::Handler do
   end
  
   def url_escape(string)
-    URI.escape(string)
+    Addressable::URI.escape(string)
   end
   
   def response_xml
